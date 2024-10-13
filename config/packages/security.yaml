@@ -38,6 +38,11 @@ security:
     access_control:
         # - { path: ^/admin, roles: ROLE_ADMIN }
         # - { path: ^/profile, roles: ROLE_USER }
+        - { path: ^/api/projects/, roles: [ROLE_ADMIN, ROLE_MANAGER]  }
+        - { path: ^/api/companies/, roles: [ROLE_CONSULTANT, ROLE_MANAGER], methods: [GET] }
+        - { path: ^/api/projects/, roles: ROLE_CONSULTANT, methods: [GET] }
+        - { path: ^/api/companies/, roles: ROLE_ADMIN }
+        - { path: ^/api/user_company_roless/, roles: ROLE_ADMIN }
 
 when@test:
     security:
