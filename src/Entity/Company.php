@@ -8,6 +8,12 @@ use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use ApiPlatform\Metadata\ApiResource;
 use Symfony\Component\Serializer\Annotation\Groups;
+use ApiPlatform\Metadata\Delete;
+use ApiPlatform\Metadata\Get;
+use ApiPlatform\Metadata\GetCollection;
+use ApiPlatform\Metadata\Patch;
+use ApiPlatform\Metadata\Post;
+use ApiPlatform\Metadata\Put;
 use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity(repositoryClass: CompanyRepository::class)]
@@ -15,6 +21,12 @@ use Symfony\Component\Validator\Constraints as Assert;
     normalizationContext: ['groups' => ['company:read']],
     denormalizationContext: ['groups' => ['company:write']]
  )]
+
+ #[Patch(security: "is_granted('edit', object)")]
+ #[Delete(security: "is_granted('delete', object)")]
+ #[GetCollection]
+ #[Post(securityPostDenormalize: "is_granted('create', object)")]
+ 
  class Company
  {
      #[ORM\Id]
@@ -35,25 +47,19 @@ use Symfony\Component\Validator\Constraints as Assert;
      #[Groups(['company:read', 'company:write'])]
      private ?string $address = null;
  
-     #[ORM\ManyToMany(targetEntity: User::class, inversedBy: 'companies')]
-    //  #[Groups(['company:read', 'company:write'])]
-     private Collection $users;
- 
-     #[ORM\OneToMany(targetEntity: Project::class, mappedBy: 'company')]
-     #[Groups(['company:read', 'company:write'])]
+     #[ORM\OneToMany(targetEntity: Project::class, mappedBy: 'Company')]
      private Collection $projects;
 
      /**
-      * @var Collection<int, UserCompanyRoles>
+      * @var Collection<int, UserCompanyAssignement>
       */
-     #[ORM\OneToMany(targetEntity: UserCompanyRoles::class, mappedBy: 'company')]
-     private Collection $userCompanyRoles;
+     #[ORM\OneToMany(targetEntity: UserCompanyAssignement::class, mappedBy: 'Company')]
+     private Collection $userCompanyAssignements;
 
     public function __construct()
     {
-        $this->users = new ArrayCollection();
         $this->projects = new ArrayCollection();
-        $this->userCompanyRoles = new ArrayCollection();
+        $this->userCompanyAssignements = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -94,25 +100,6 @@ use Symfony\Component\Validator\Constraints as Assert;
         return $this;
     }
 
-    public function getUsers(): Collection
-    {
-        return $this->users;
-    }
-
-    public function addUser(User $user): static
-    {
-        if (!$this->users->contains($user)) {
-            $this->users->add($user);
-        }
-        return $this;
-    }
-
-    public function removeUser(User $user): static
-    {
-        $this->users->removeElement($user);
-        return $this;
-    }
-
     public function getProjects(): Collection
     {
         return $this->projects;
@@ -138,29 +125,28 @@ use Symfony\Component\Validator\Constraints as Assert;
     }
 
     /**
-     * @return Collection<int, UserCompanyRoles>
+     * @return Collection<int, UserCompanyAssignement>
      */
-    public function getUserCompanyRoles(): Collection
+    public function getUserCompanyAssignements(): Collection
     {
-        return $this->userCompanyRoles;
+        return $this->userCompanyAssignements;
     }
 
-    public function addUserCompanyRole(UserCompanyRoles $userCompanyRole): static
+    public function addUserCompanyAssignement(UserCompanyAssignement $userCompanyAssignement): static
     {
-        if (!$this->userCompanyRoles->contains($userCompanyRole)) {
-            $this->userCompanyRoles->add($userCompanyRole);
-            $userCompanyRole->setCompany($this);
+        if (!$this->userCompanyAssignements->contains($userCompanyAssignement)) {
+            $this->userCompanyAssignements->add($userCompanyAssignement);
+            $userCompanyAssignement->setCompany($this);
         }
 
         return $this;
     }
 
-    public function removeUserCompanyRole(UserCompanyRoles $userCompanyRole): static
+    public function removeUserCompanyAssignement(UserCompanyAssignement $userCompanyAssignement): static
     {
-        if ($this->userCompanyRoles->removeElement($userCompanyRole)) {
-            // set the owning side to null (unless already changed)
-            if ($userCompanyRole->getCompany() === $this) {
-                $userCompanyRole->setCompany(null);
+        if ($this->userCompanyAssignements->removeElement($userCompanyAssignement)) {
+            if ($userCompanyAssignement->getCompany() === $this) {
+                $userCompanyAssignement->setCompany(null);
             }
         }
 

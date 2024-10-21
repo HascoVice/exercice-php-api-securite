@@ -5,9 +5,19 @@ namespace App\Entity;
 use ApiPlatform\Metadata\ApiResource;
 use App\Repository\ProjectRepository;
 use Doctrine\ORM\Mapping as ORM;
+use ApiPlatform\Metadata\Delete;
+use ApiPlatform\Metadata\Get;
+use ApiPlatform\Metadata\GetCollection;
+use ApiPlatform\Metadata\Patch;
+use ApiPlatform\Metadata\Post;
+use ApiPlatform\Metadata\Put;
 
 #[ORM\Entity(repositoryClass: ProjectRepository::class)]
 #[ApiResource]
+#[Patch(security: "is_granted('edit', object)")]
+#[Delete(security: "is_granted('delete', object)")]
+#[GetCollection]
+#[Post(securityPostDenormalize: "is_granted('create', object)")]
 class Project
 {
     #[ORM\Id]
@@ -24,7 +34,8 @@ class Project
     #[ORM\Column]
     private ?\DateTimeImmutable $createdAt = null;
 
-    #[ORM\ManyToOne(inversedBy: 'projects')]
+    #[ORM\ManyToOne(targetEntity: Company::class, inversedBy: 'projects')]
+    #[ORM\JoinColumn(nullable: false, onDelete: 'CASCADE')] 
     private ?Company $company = null;
 
     public function getId(): ?int

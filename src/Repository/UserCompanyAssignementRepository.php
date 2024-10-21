@@ -2,22 +2,22 @@
 
 namespace App\Repository;
 
-use App\Entity\UserCompanyRoles;
+use App\Entity\UserCompanyAssignement;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
 /**
- * @extends ServiceEntityRepository<UserCompanyRoles>
+ * @extends ServiceEntityRepository<UserCompanyAssignement>
  */
-class UserCompanyRolesRepository extends ServiceEntityRepository
+class UserCompanyAssignementRepository extends ServiceEntityRepository
 {
     public function __construct(ManagerRegistry $registry)
     {
-        parent::__construct($registry, UserCompanyRoles::class);
+        parent::__construct($registry, UserCompanyAssignement::class);
     }
 
 //    /**
-//     * @return UserCompanyRoles[] Returns an array of UserCompanyRoles objects
+//     * @return UserCompanyAssignement[] Returns an array of UserCompanyAssignement objects
 //     */
 //    public function findByExampleField($value): array
 //    {
@@ -31,7 +31,7 @@ class UserCompanyRolesRepository extends ServiceEntityRepository
 //        ;
 //    }
 
-//    public function findOneBySomeField($value): ?UserCompanyRoles
+//    public function findOneBySomeField($value): ?UserCompanyAssignement
 //    {
 //        return $this->createQueryBuilder('u')
 //            ->andWhere('u.exampleField = :val')

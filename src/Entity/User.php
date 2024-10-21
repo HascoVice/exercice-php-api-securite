@@ -10,6 +10,11 @@ use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
 use Symfony\Component\Serializer\Annotation\Groups;
 use ApiPlatform\Metadata\ApiResource;
+use ApiPlatform\Metadata\Delete;
+use ApiPlatform\Metadata\Get;
+use ApiPlatform\Metadata\GetCollection;
+use ApiPlatform\Metadata\Patch;
+use ApiPlatform\Metadata\Post;
 
 #[ORM\Entity(repositoryClass: UserRepository::class)]
 #[ORM\UniqueConstraint(name: 'UNIQ_IDENTIFIER_EMAIL', fields: ['email'])]
@@ -17,6 +22,11 @@ use ApiPlatform\Metadata\ApiResource;
     normalizationContext: ['groups' => ['user:read']],
     denormalizationContext: ['groups' => ['user:write']]
 )]
+#[Patch(security: "is_granted('edit', object)")]
+#[Delete(security: "is_granted('delete', object)")]
+#[GetCollection]
+#[Post(securityPostDenormalize: "is_granted('create', object)")]
+
 class User implements UserInterface, PasswordAuthenticatedUserInterface
 {
     #[ORM\Id]
@@ -33,20 +43,15 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[Groups(['user:write'])]
     private ?string $password = null;
 
-    #[ORM\Column]
-    #[Groups(['user:write'])]
-    private array $roles = [];
-
-    #[ORM\ManyToMany(targetEntity: Company::class, mappedBy: 'users')]
-    #[Groups(['user:read', 'user:write'])]
-    private Collection $companies;
-
-    #[ORM\ManyToOne(inversedBy: 'user')]
-    private ?UserCompanyRoles $userCompanyRoles = null;
+    /**
+     * @var Collection<int, UserCompanyAssignement>
+     */
+    #[ORM\OneToMany(targetEntity: UserCompanyAssignement::class, mappedBy: 'user')]
+    private Collection $userCompanyAssignements;
 
     public function __construct()
     {
-        $this->companies = new ArrayCollection();
+        $this->userCompanyAssignements = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -76,29 +81,6 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         return (string)$this->email;
     }
 
-    /**
-     * @return list<string>
-     * @see UserInterface
-     */
-    #[Groups(['user:read'])]
-    public function getRoles(): array
-    {
-        $roles = $this->roles;
-        // guarantee every user at least has ROLE_USER
-        $roles[] = 'ROLE_USER';
-
-        return array_unique($roles);
-    }
-
-    /**
-     * @param list<string> $roles
-     */
-    public function setRoles(array $roles): static
-    {
-        $this->roles = $roles;
-        return $this;
-    }
-
     public function getPassword(): ?string
     {
         return $this->password;
@@ -115,45 +97,41 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
      */
     public function eraseCredentials(): void
     {
-        // Effacer toute donnée sensible si nécessaire
+    
+    }
+
+
+    public function getRoles(): array
+    {
+        return ['ROLE_USER'];
     }
 
     /**
-     * @return Collection<int, Company>
+     * @return Collection<int, UserCompanyAssignement>
      */
-    #[Groups(['user:read', 'company:read'])]
-    public function getCompanies(): Collection
+    public function getUserCompanyAssignements(): Collection
     {
-        return $this->companies;
+        return $this->userCompanyAssignements;
     }
 
-    public function addCompany(Company $company): static
+    public function addUserCompanyAssignement(UserCompanyAssignement $userCompanyAssignement): static
     {
-        if (!$this->companies->contains($company)) {
-            $this->companies->add($company);
-            $company->addUser($this);
+        if (!$this->userCompanyAssignements->contains($userCompanyAssignement)) {
+            $this->userCompanyAssignements->add($userCompanyAssignement);
+            $userCompanyAssignement->setUser($this);
         }
 
         return $this;
     }
 
-    public function removeCompany(Company $company): static
+    public function removeUserCompanyAssignement(UserCompanyAssignement $userCompanyAssignement): static
     {
-        if ($this->companies->removeElement($company)) {
-            $company->removeUser($this);
+        if ($this->userCompanyAssignements->removeElement($userCompanyAssignement)) {
+       
+            if ($userCompanyAssignement->getUser() === $this) {
+                $userCompanyAssignement->setUser(null);
+            }
         }
-
-        return $this;
-    }
-
-    public function getUserCompanyRoles(): ?UserCompanyRoles
-    {
-        return $this->userCompanyRoles;
-    }
-
-    public function setUserCompanyRoles(?UserCompanyRoles $userCompanyRoles): static
-    {
-        $this->userCompanyRoles = $userCompanyRoles;
 
         return $this;
     }

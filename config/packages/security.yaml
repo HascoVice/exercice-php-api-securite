@@ -38,11 +38,10 @@ security:
     access_control:
         # - { path: ^/admin, roles: ROLE_ADMIN }
         # - { path: ^/profile, roles: ROLE_USER }
-        - { path: ^/api/projects/, roles: [ROLE_ADMIN, ROLE_MANAGER]  }
-        - { path: ^/api/companies/, roles: [ROLE_CONSULTANT, ROLE_MANAGER], methods: [GET] }
-        - { path: ^/api/projects/, roles: ROLE_CONSULTANT, methods: [GET] }
-        - { path: ^/api/companies/, roles: ROLE_ADMIN }
-        - { path: ^/api/user_company_roless/, roles: ROLE_ADMIN }
+        - { path: ^/api/companies, roles: IS_AUTHENTICATED_FULLY }
+        - { path: ^/api/projects, roles: IS_AUTHENTICATED_FULLY }
+        - { path: ^/api/user_company_assignements, roles: IS_AUTHENTICATED_FULLY }
+        - { path: ^/api/users, roles: IS_AUTHENTICATED_FULLY, methods: [GET, PATCH, PUT, DELETE] }
 
 when@test:
     security:
